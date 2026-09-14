@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Allow the dynamic preview host (e.g. 5173-<id>.e2b.app) plus local dev.
+    allowedHosts: [".e2b.app", "localhost", "127.0.0.1"],
     proxy: {
       "/predict": {
         target: process.env.VITE_API_TARGET || "http://localhost:8000",
