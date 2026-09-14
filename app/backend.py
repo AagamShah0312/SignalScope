@@ -1,0 +1,244 @@
+from io import BytesIO
+from pathlib import Path
+
+import torch
+from PIL import Image
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.models.model import create_model
+from src.data.transforms import get_eval_transforms
+
+
+# ==============================================================
+# Configuration
+# ==============================================================
+
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+CHECKPOINT_PATH = Path(
+    "model/best_efficientnet_b0_mixed.pth"
+)
+
+IMAGE_SIZE = 224
+
+
+# ==============================================================
+# FastAPI application
+# ==============================================================
+
+app = FastAPI(
+    title="SignalScope API",
+    description="AI-generated image detection backend",
+    version="1.0.0",
+)
+
+
+# ==============================================================
+# CORS
+# Allows the React frontend to communicate with this API.
+# ==============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ==============================================================
+# Load model
+# ==============================================================
+
+print("=" * 60)
+print("SignalScope API")
+print("=" * 60)
+
+print(f"Device: {DEVICE}")
+
+if torch.cuda.is_available():
+    print(
+        f"GPU: {torch.cuda.get_device_name(0)}"
+    )
+
+print(
+    f"Loading checkpoint: {CHECKPOINT_PATH}"
+)
+
+model = create_model(
+    num_classes=2,
+    pretrained=False,
+)
+
+checkpoint = torch.load(
+    CHECKPOINT_PATH,
+    map_location=DEVICE,
+)
+
+if "model_state_dict" in checkpoint:
+    state_dict = checkpoint["model_state_dict"]
+else:
+    state_dict = checkpoint
+
+model.load_state_dict(state_dict)
+
+model = model.to(DEVICE)
+model.eval()
+
+transform = get_eval_transforms()
+
+print("Model loaded successfully.")
+print("=" * 60)
+
+
+# ==============================================================
+# Health check
+# ==============================================================
+
+@app.get("/")
+def root():
+    return {
+        "name": "SignalScope API",
+        "status": "running",
+        "model": "EfficientNet-B0 Mixed",
+        "device": str(DEVICE),
+    }
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "model_loaded": True,
+        "device": str(DEVICE),
+    }
+
+
+# ==============================================================
+# Prediction endpoint
+# ==============================================================
+
+@app.post("/predict")
+async def predict_image(
+    file: UploadFile = File(...)
+):
+
+    # ----------------------------------------------------------
+    # Validate file type
+    # ----------------------------------------------------------
+
+    allowed_types = {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/bmp",
+    }
+
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported image format. "
+                "Please upload JPG, PNG, WEBP, or BMP."
+            ),
+        )
+
+    # ----------------------------------------------------------
+    # Read image
+    # ----------------------------------------------------------
+
+    try:
+
+        contents = await file.read()
+
+        image = Image.open(
+            BytesIO(contents)
+        ).convert("RGB")
+
+    except Exception:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Could not read the uploaded image.",
+        )
+
+    # ----------------------------------------------------------
+    # Preprocess
+    # ----------------------------------------------------------
+
+    image_tensor = transform(
+        image
+    ).unsqueeze(0)
+
+    image_tensor = image_tensor.to(
+        DEVICE
+    )
+
+    # ----------------------------------------------------------
+    # Model prediction
+    # ----------------------------------------------------------
+
+    with torch.no_grad():
+
+        outputs = model(
+            image_tensor
+        )
+
+        probabilities = torch.softmax(
+            outputs,
+            dim=1
+        )[0]
+
+    real_probability = float(
+        probabilities[0].item()
+    )
+
+    ai_probability = float(
+        probabilities[1].item()
+    )
+
+    # ----------------------------------------------------------
+    # Final prediction
+    # ----------------------------------------------------------
+
+    if ai_probability >= 0.5:
+
+        label = "AI Generated"
+        confidence = ai_probability
+
+    else:
+
+        label = "Likely Real"
+        confidence = real_probability
+
+    # ----------------------------------------------------------
+    # Response
+    # ----------------------------------------------------------
+
+    return {
+        "label": label,
+        "confidence": round(
+            confidence,
+            4
+        ),
+        "probability_ai": round(
+            ai_probability,
+            4
+        ),
+        "probability_real": round(
+            real_probability,
+            4
+        ),
+        "filename": file.filename,
+        "message": (
+            "This is a likelihood assessment based on "
+            "the model's learned visual patterns."
+        ),
+    }
