@@ -157,7 +157,7 @@ def main():
     probabilities = np.array(all_probs)
     predictions = np.array(all_predictions)
 
-    auc = roc_auc_score(
+    print(f"Probability range: {probabilities.min():.4f} to {probabilities.max():.4f}"); print(f"Probability mean: {probabilities.mean():.4f}"); print(f"Real mean probability: {probabilities[labels == 0].mean():.4f}"); print(f"AI mean probability: {probabilities[labels == 1].mean():.4f}"); auc = roc_auc_score(
         labels,
         probabilities,
     )
@@ -219,7 +219,7 @@ def main():
         # Real images contain only class 0,
         # so ROC-AUC cannot be calculated for them.
         if len(np.unique(generator_labels)) == 2:
-            generator_auc = roc_auc_score(
+            generator_print(f"Probability range: {probabilities.min():.4f} to {probabilities.max():.4f}"); print(f"Probability mean: {probabilities.mean():.4f}"); print(f"Real mean probability: {probabilities[labels == 0].mean():.4f}"); print(f"AI mean probability: {probabilities[labels == 1].mean():.4f}"); auc = roc_auc_score(
                 generator_labels,
                 generator_probs,
             )
