@@ -237,3 +237,12 @@ reports/generated/
 # Python cache
 __pycache__/
 *.py[cod]
+# SignalScope additions
+output/
+frontend/node_modules/
+frontend/dist/
+*.egg-info/
+.python-version
+
+# local experiment artifacts (committed reports are tracked explicitly)
+experiments/

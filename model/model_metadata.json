@@ -1,0 +1,23 @@
+{
+  "architecture": "EfficientNet-B0",
+  "pretrained": true,
+  "image_size": 224,
+  "classes": ["REAL", "AI_GENERATED"],
+  "seed": "not_recorded (pre-refactor baseline)",
+  "epochs": 1,
+  "batch_size": 16,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "optimizer": "adamw",
+  "dataset": "CIFAKE",
+  "train_size": 90000,
+  "validation_size": 10000,
+  "test_size": 20000,
+  "augmentation": "baseline",
+  "frequency_features": false,
+  "selection_metric": "val_auc",
+  "calibration": "none (identity)",
+  "training_date": "pre-refactor baseline checkpoint",
+  "checkpoint": "src/models/best_efficientnet_b0.pth",
+  "notes": "Shipped baseline (1-epoch CIFAKE). Retrain with scripts/train.py to improve."
+}

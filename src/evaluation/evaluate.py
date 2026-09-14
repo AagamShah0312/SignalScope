@@ -1,133 +1,97 @@
+"""Evaluate a trained SignalScope model on the frozen CIFAKE test split.
+
+Produces:
+    reports/evaluation_results.json  (metrics + confusion matrix)
+    reports/roc_curve.png            (ROC curve)
+
+The CIFAKE test split is a *public* benchmark, not the official SIH held-out
+set.  Results here must never be presented as the official score.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
 from pathlib import Path
 
 import numpy as np
 import torch
-from sklearn.metrics import (
-    accuracy_score,
-    confusion_matrix,
-    f1_score,
-    roc_auc_score,
-)
 from tqdm import tqdm
 
+from src.config import load_config
 from src.data.loaders import create_dataloaders
-from src.models.model import create_model, get_device
+from src.evaluation.metrics import compute_metrics, format_metrics
+from src.models.model import create_model, load_checkpoint
 
 
-MODEL_PATH = Path("model/best_efficientnet_b0.pth")
+def run_inference(model, loader, device):
+    all_labels, all_probs = [], []
+    model.eval()
+    with torch.no_grad():
+        for images, labels in tqdm(loader, desc="Evaluating"):
+            images = images.to(device, non_blocking=True)
+            outputs = model(images)
+            probs = torch.softmax(outputs, dim=1)[:, 1]
+            all_labels.extend(labels.numpy())
+            all_probs.extend(probs.cpu().numpy())
+    return np.array(all_labels), np.array(all_probs)
+
+
+def save_roc_curve(y_true, y_prob, path: Path) -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import roc_curve, roc_auc_score
+
+    fpr, tpr, _ = roc_curve(y_true, y_prob)
+    auc = roc_auc_score(y_true, y_prob)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(fpr, tpr, label=f"SignalScope (AUC = {auc:.4f})")
+    ax.plot([0, 1], [0, 1], "k--", label="chance")
+    ax.set_xlabel("False positive rate")
+    ax.set_ylabel("True positive rate")
+    ax.set_title("ROC curve — public CIFAKE test split")
+    ax.legend(loc="lower right")
+    fig.tight_layout()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=120)
+    plt.close(fig)
 
 
 def main():
-    device = get_device()
+    parser = argparse.ArgumentParser(description="Evaluate on the public CIFAKE test split.")
+    parser.add_argument("--config", default=None)
+    parser.add_argument("--checkpoint", default=None)
+    parser.add_argument("--threshold", type=float, default=None)
+    args = parser.parse_args()
 
-    print("=" * 60)
-    print("SignalScope Test Evaluation")
-    print("=" * 60)
+    cfg = load_config(args.config)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    threshold = args.threshold if args.threshold is not None else float(cfg.evaluation.threshold)
 
-    print(f"Device: {device}")
+    _, _, test_loader = create_dataloaders()
 
-    if device.type == "cuda":
-        print(f"GPU: {torch.cuda.get_device_name(0)}")
+    checkpoint = args.checkpoint or str(cfg.resolve(cfg.paths.checkpoint))
+    model = create_model(num_classes=int(cfg.data.num_classes), pretrained=False)
+    load_checkpoint(model, checkpoint, device=device)
 
-    _, _, test_loader = create_dataloaders(
-        batch_size=16,
-        num_workers=2,
-    )
+    y_true, y_prob = run_inference(model, test_loader, device)
+    metrics = compute_metrics(y_true, y_prob, threshold=threshold)
 
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(
-            f"Model checkpoint not found: {MODEL_PATH}"
-        )
+    print("\n" + "=" * 58)
+    print("CIFAKE TEST RESULTS (public benchmark — not the SIH score)")
+    print("=" * 58)
+    print(format_metrics(metrics))
 
-    model = create_model(
-        num_classes=2,
-        pretrained=False,
-    )
+    reports_dir = cfg.resolve(cfg.paths.reports_dir)
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    with open(reports_dir / "evaluation_results.json", "w", encoding="utf-8") as fh:
+        json.dump(metrics, fh, indent=2, default=float)
+    save_roc_curve(y_true, y_prob, reports_dir / "roc_curve.png")
 
-    model.load_state_dict(
-        torch.load(
-            MODEL_PATH,
-            map_location=device,
-        )
-    )
-
-    model = model.to(device)
-    model.eval()
-
-    all_labels = []
-    all_probabilities = []
-
-    print("\nRunning inference on test set...")
-
-    with torch.no_grad():
-        for images, labels in tqdm(
-            test_loader,
-            desc="Testing",
-        ):
-            images = images.to(
-                device,
-                non_blocking=True,
-            )
-
-            outputs = model(images)
-
-            probabilities = torch.softmax(
-                outputs,
-                dim=1,
-            )[:, 1]
-
-            all_labels.extend(
-                labels.numpy()
-            )
-
-            all_probabilities.extend(
-                probabilities.cpu().numpy()
-            )
-
-    y_true = np.array(all_labels)
-    y_prob = np.array(all_probabilities)
-
-    y_pred = (
-        y_prob >= 0.5
-    ).astype(int)
-
-    auc = roc_auc_score(
-        y_true,
-        y_prob,
-    )
-
-    macro_f1 = f1_score(
-        y_true,
-        y_pred,
-        average="macro",
-    )
-
-    accuracy = accuracy_score(
-        y_true,
-        y_pred,
-    )
-
-    cm = confusion_matrix(
-        y_true,
-        y_pred,
-    )
-
-    print("\n" + "=" * 60)
-    print("TEST RESULTS")
-    print("=" * 60)
-
-    print(f"ROC-AUC:  {auc:.4f}")
-    print(f"Macro-F1: {macro_f1:.4f}")
-    print(f"Accuracy: {accuracy:.4f}")
-
-    print("\nConfusion Matrix:")
-    print(cm)
-
-    print("\nClass mapping:")
-    print("0 = REAL")
-    print("1 = FAKE")
-
-    print("=" * 60)
+    print(f"\nSaved: {reports_dir / 'evaluation_results.json'}")
+    print(f"Saved: {reports_dir / 'roc_curve.png'}")
 
 
 if __name__ == "__main__":

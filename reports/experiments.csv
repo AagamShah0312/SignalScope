@@ -1,0 +1,2 @@
+experiment_name,timestamp,dataset,train_size,validation_size,test_size,model,pretrained,epochs,learning_rate,batch_size,optimizer,weight_decay,augmentation,frequency_features,calibration,seed,val_auc,val_loss,val_macro_f1,val_accuracy,notes
+cifake-baseline-1epoch,,cifake,90000,10000,20000,EfficientNet-B0,true,1,0.0001,16,adamw,0.0001,baseline,false,none,unavailable,unavailable,unavailable,unavailable,unavailable,Shipped baseline (pre-refactor). CIFAKE test: AUC=0.9973 Macro-F1=0.9723 Acc=0.9723. Retrain with scripts/train.py.

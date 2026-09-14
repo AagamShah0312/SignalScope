@@ -1,0 +1,7 @@
+{
+  "method": "none",
+  "threshold": 0.5,
+  "temperature": 1.0,
+  "calibrated": false,
+  "note": "Identity calibration. Run 'scripts/calibrate.py' on validation data to learn temperature scaling and an improved threshold."
+}

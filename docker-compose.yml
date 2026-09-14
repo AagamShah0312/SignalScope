@@ -1,0 +1,25 @@
+# =============================================================================
+# SignalScope — API + frontend
+# =============================================================================
+#   docker compose up --build
+# then open http://localhost:8080
+# =============================================================================
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+.git
+.venv
+__pycache__
+*.pyc
+data
+experiments
+output
+reports/generated
+frontend/node_modules
+frontend/dist
+tests
+*.md
