@@ -24,12 +24,15 @@ SAFE_TAGS = {
 
 # Mapping of PIL numeric tags to names, where the numeric tag is the IFD id.
 def _tag_name_map():
-    mapping = {}
-    try:
-        mapping = {v: k for k, v in ExifTags.TAGS.items()}
-    except Exception:
-        pass
-    return mapping
+    tags = getattr(ExifTags, "TAGS", {}) or {}
+    if not tags:
+        return {}
+    # Pillow >= 12 maps id -> name; older Pillow maps name -> id.  Normalise
+    # both to id -> name.
+    first_key = next(iter(tags))
+    if isinstance(first_key, int):
+        return {int(k): v for k, v in tags.items()}
+    return {v: k for k, v in tags.items()}
 
 
 def extract_exif(image: Image.Image) -> Dict[str, object]:

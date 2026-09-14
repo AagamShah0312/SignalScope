@@ -21,7 +21,7 @@ into a hackathon-ready SignalScope system. Committed to branch
 | API | **DONE** (FastAPI, validation, observability, Swagger) |
 | DEPLOYMENT | PARTIAL (Docker files authored; not executed here — no Docker in env) |
 | DOCUMENTATION | **DONE** (README, model report/card, DATASETS, ORIGINALITY, failure analysis) |
-| TESTING | **DONE** (38 tests passing) |
+| TESTING | **DONE** (73 tests passing, incl. a security suite) |
 
 ## Files created
 
@@ -36,7 +36,7 @@ src/provenance/{__init__,exif,c2pa}.py
 src/robustness/{degradations,benchmark}.py
 src/training/{calibrate,calibration,finetune,losses,reproducibility,tracking}.py
 scripts/{train,evaluate,predict,calibrate,finetune,build_finetune_dataset,compare_real_ai,reproduce_real_photo_false_positives}.py
-tests/{conftest,test_model,test_dataset,test_inference,test_api,test_metrics,test_provenance,test_frequency_features,test_calibration}.py
+tests/{conftest,test_model,test_dataset,test_inference,test_api,test_metrics,test_provenance,test_frequency_features,test_calibration,test_security}.py
 model/{model_metadata,calibration}.json
 reports/{model_report,model_card,failure_analysis,real_photo_adaptation}.md
 reports/{experiments,unseen_generator_results,robustness_results,real_photo_adaptation,real_photo_false_positives}.csv
@@ -57,6 +57,9 @@ README.md              (full rewrite)
 .gitignore             (+ output/, frontend artifacts, experiments/, data/real_photos/)
 src/models/model.py    (+ load_checkpoint, resolve_checkpoint)
 app/inference.py       (ensemble-capable predictor, shared checkpoint resolution)
+app/preprocessing.py   (header-before-decode decompression-bomb defence)
+src/provenance/exif.py (Pillow 12 ExifTags.TAGS orientation fix + GPS redaction)
+src/explainability/gradcam.py (visualization saving + base-name sanitization)
 src/data/{dataset,loaders,transforms}.py
 src/training/train.py  (unified config-driven trainer + shared train_model)
 src/evaluation/evaluate.py
@@ -75,7 +78,7 @@ cd frontend && npm install && npm run dev                       # UI
 python -m src.training.train --dataset mixed                    # train (needs data)
 python -m src.training.calibrate --dataset mixed                # calibrate (needs data)
 python -m src.evaluation.evaluate_unseen                        # cross-generator (needs data)
-pytest tests/ -q                                               # 38 tests
+pytest tests/ -q                                               # 73 tests (incl. security)
 ```
 
 ## Model weights location

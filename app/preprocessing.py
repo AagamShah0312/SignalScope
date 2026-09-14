@@ -64,12 +64,18 @@ def validate_file(
     if mime_type and mime_type not in ALLOWED_MIME_TYPES:
         raise ImageValidationError(f"Unsupported MIME type '{mime_type}'.")
 
+    # Open the header only (lazy).  ``Image.open`` does not decode pixels, so
+    # we can validate dimensions from the header *before* any expensive or
+    # memory-hungry decode — this is the decompression-bomb defence.
     try:
         image = Image.open(io.BytesIO(contents))
-        image.load()  # force full decode (catches truncated/corrupt files)
-    except (UnidentifiedImageError, OSError, ValueError) as exc:
-        raise ImageValidationError("Could not read the image (corrupt or unsupported).") from exc
+    except (UnidentifiedImageError, OSError, ValueError,
+            Image.DecompressionBombError) as exc:
+        raise ImageValidationError(
+            "Could not read the image (corrupt or unsupported)."
+        ) from exc
 
+    # ---- dimension checks from the header (before decoding pixels) ----
     if image.width < 16 or image.height < 16:
         raise ImageValidationError(
             f"Image is too small ({image.width}x{image.height}). Minimum is 16x16."
@@ -82,6 +88,14 @@ def validate_file(
         raise ImageValidationError(
             f"Image has too many pixels ({image.width * image.height})."
         )
+
+    try:
+        image.load()  # force full decode (catches truncated/corrupt files)
+    except (UnidentifiedImageError, OSError, ValueError,
+            Image.DecompressionBombError) as exc:
+        raise ImageValidationError(
+            "Could not read the image (corrupt or unsupported)."
+        ) from exc
 
     return image.convert("RGB")
 

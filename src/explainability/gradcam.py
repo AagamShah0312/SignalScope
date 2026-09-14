@@ -116,14 +116,19 @@ def save_visualization(
 
     Returns a dict of absolute paths keyed by ``original``/``heatmap``/``overlay``.
     """
+    import re
     from pathlib import Path
+
+    # Sanitize the base name so it can never escape the output directory
+    # (defence-in-depth against path traversal via "../" or separators).
+    safe_base = re.sub(r"[^A-Za-z0-9_-]", "_", base_name).strip("._") or "gradcam"
 
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    original_path = out / f"{base_name}_original.jpg"
-    heatmap_path = out / f"{base_name}_heatmap.jpg"
-    overlay_path = out / f"{base_name}_overlay.jpg"
+    original_path = out / f"{safe_base}_original.jpg"
+    heatmap_path = out / f"{safe_base}_heatmap.jpg"
+    overlay_path = out / f"{safe_base}_overlay.jpg"
 
     Image.fromarray(original_rgb).save(original_path, quality=92)
 

@@ -285,6 +285,27 @@ metadata is never treated as evidence of AI generation.
   `docker-compose.yml`). **Note:** the Docker build was authored but not
   executed in the development environment.
 
+## Security
+
+The upload path is hardened and covered by `tests/test_security.py` (31 tests):
+
+- **Input validation** — empty/oversized files, disallowed extensions and MIME
+  types, and content spoofing (a file claiming to be an image but containing
+  HTML/scripts) are rejected with a clean 4xx.
+- **Decompression-bomb defence** — image dimensions are checked from the file
+  header *before* pixel decode, and Pillow's `DecompressionBombError` is caught.
+- **Upload-bomb protection** — a hard byte limit (config `inference.max_upload_mb`)
+  returns `413` for oversized uploads.
+- **Path traversal** — the `/files` static mount blocks `../`; Grad-CAM output
+  names are sanitized so they can never escape the output directory.
+- **Metadata privacy** — EXIF extraction is a strict whitelist; GPS/location is
+  never surfaced (only camera/software/date fields).
+- **No information leakage** — error responses contain no stack traces or
+  internal paths; filenames are never reflected into responses.
+- **Responsible claims** — verdicts come from a fixed vocabulary
+  (`Likely AI-generated` / `Likely real` / `Inconclusive`) with no absolute
+  accusations.
+
 ## Team
 
 *To be filled in by the team.*
