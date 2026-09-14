@@ -1,7 +1,15 @@
 {
-  "method": "none",
-  "threshold": 0.5,
-  "temperature": 1.0,
-  "calibrated": false,
-  "note": "Identity calibration. Run 'scripts/calibrate.py' on validation data to learn temperature scaling and an improved threshold."
+  "method": "temperature_scaling",
+  "threshold": 0.7497652769088745,
+  "temperature": 0.7219856381416321,
+  "parameters": {
+    "temperature": 0.7219856381416321
+  },
+  "quality": {
+    "brier_score": 0.11334238946437836,
+    "log_loss": 0.31831061840057373,
+    "expected_calibration_error": 0.18587206222582608,
+    "brier_score_before": 0.11027643829584122,
+    "ece_before": 0.19693514879327267
+  }
 }

@@ -1,0 +1,182 @@
+[
+  {
+    "label": "real/coffee",
+    "description": "Photograph of a coffee mug (scikit-image sample)",
+    "path": "data/real_photos/bundled/coffee.png",
+    "verdict": "Likely real",
+    "p_ai": 0.0364,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.5059871077537537,
+      "max_activation": 0.9999998807907104,
+      "top5pct_concentration": 1.9698
+    },
+    "explanation_summary": "Likely real \u2014 96% confidence. The model estimates a high likelihood that this is a real photograph.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "real/chelsea",
+    "description": "Photograph of a cat (scikit-image sample)",
+    "path": "data/real_photos/bundled/chelsea.png",
+    "verdict": "Likely real",
+    "p_ai": 0.011,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.5113091468811035,
+      "max_activation": 0.9999998807907104,
+      "top5pct_concentration": 1.9438
+    },
+    "explanation_summary": "Likely real \u2014 99% confidence. The model estimates a high likelihood that this is a real photograph.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "real/horse",
+    "description": "Photograph of a horse (scikit-image sample)",
+    "path": "data/real_photos/bundled/horse.png",
+    "verdict": "Likely real",
+    "p_ai": 0.0,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.4237067997455597,
+      "max_activation": 1.0,
+      "top5pct_concentration": 2.1818
+    },
+    "explanation_summary": "Likely real \u2014 100% confidence. The model estimates a high likelihood that this is a real photograph.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "real/butterfly",
+    "description": "Photograph of a butterfly (OpenCV sample data)",
+    "path": "data/real_photos/opencv/butterfly.jpg",
+    "verdict": "Inconclusive",
+    "p_ai": 0.7049,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.13229338824748993,
+      "max_activation": 0.9999999403953552,
+      "top5pct_concentration": 6.5095
+    },
+    "explanation_summary": "Inconclusive \u2014 70% confidence. The model does not have enough evidence to make a strong prediction.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "real/fruits",
+    "description": "Photograph of fruits (OpenCV sample data)",
+    "path": "data/real_photos/opencv/fruits.jpg",
+    "verdict": "Inconclusive",
+    "p_ai": 0.5239,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.2749548852443695,
+      "max_activation": 0.9999997615814209,
+      "top5pct_concentration": 3.5668
+    },
+    "explanation_summary": "Inconclusive \u2014 52% confidence. The model does not have enough evidence to make a strong prediction.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "ai/ceramic_mug",
+    "description": "AI-generated ceramic mug (project demo)",
+    "path": "demo/ai_generated/ai_ceramic_mug.jpg",
+    "verdict": "Likely AI-generated",
+    "p_ai": 0.9999,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.44615915417671204,
+      "max_activation": 0.9999999403953552,
+      "top5pct_concentration": 2.2282
+    },
+    "explanation_summary": "Likely AI-generated \u2014 100% confidence. The model estimates a high likelihood that this image was synthetically generated.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "ai/landscape",
+    "description": "AI-generated landscape (project demo)",
+    "path": "demo/ai_generated/ai_landscape.jpg",
+    "verdict": "Inconclusive",
+    "p_ai": 0.5105,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.2858732044696808,
+      "max_activation": 0.9999997615814209,
+      "top5pct_concentration": 3.3199
+    },
+    "explanation_summary": "Inconclusive \u2014 51% confidence. The model does not have enough evidence to make a strong prediction.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "ai/abstract_art",
+    "description": "AI-generated abstract art (project demo)",
+    "path": "demo/ai_generated/ai_abstract_art.jpg",
+    "verdict": "Likely AI-generated",
+    "p_ai": 0.9999,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.40895918011665344,
+      "max_activation": 0.9999999403953552,
+      "top5pct_concentration": 2.377
+    },
+    "explanation_summary": "Likely AI-generated \u2014 100% confidence. The model estimates a high likelihood that this image was synthetically generated.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "ai/forest",
+    "description": "AI-generated forest scene (project training data)",
+    "path": "data/ai_synthetic/ai_01_forest.jpg",
+    "verdict": "Inconclusive",
+    "p_ai": 0.3315,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.4579885005950928,
+      "max_activation": 0.9999999403953552,
+      "top5pct_concentration": 2.1577
+    },
+    "explanation_summary": "Inconclusive \u2014 67% confidence. The model does not have enough evidence to make a strong prediction.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  },
+  {
+    "label": "ai/cat",
+    "description": "AI-generated cat (project training data)",
+    "path": "data/ai_synthetic/ai_07_cat.jpg",
+    "verdict": "Likely AI-generated",
+    "p_ai": 1.0,
+    "strongest_region": null,
+    "n_regions": 0,
+    "concentration": {
+      "mean_activation": 0.4957289397716522,
+      "max_activation": 0.9999998807907104,
+      "top5pct_concentration": 2.0023
+    },
+    "explanation_summary": "Likely AI-generated \u2014 100% confidence. The model estimates a high likelihood that this image was synthetically generated.",
+    "explanation_evidence": [
+      "The model's attention is diffuse across the image rather than localized to a single region."
+    ]
+  }
+]

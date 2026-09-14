@@ -44,9 +44,32 @@ Shipped baseline (measured, preserved from the pre-refactor experiments):
 Confusion matrix (CIFAKE baseline): `[[9568, 432], [122, 9878]]`.
 Confusion matrix (Defactify, mixed): `[[73, 27], [81, 419]]`.
 
-Unseen-generator AUC (leave-one-generator-out): **pending** — requires the
-Defactify dataset locally; the experiment runner is implemented
-(`src/evaluation/evaluate_unseen.py`).
+Unseen-generator AUC (leave-one-generator-out): **pending / blocked** — the
+runner (`src/evaluation/evaluate_unseen.py`) is implemented but the Defactify
+dataset cannot be downloaded in the evaluation environment
+(`datasets-server.huggingface.co` → TLS connection closed; verified
+2026-09-14). No unseen-split number is fabricated here.
+
+## CALIBRATION
+
+Temperature scaling fitted on the **local public adaptation validation set**
+(16 images: 12 real + 4 AI) via `scripts/calibrate_ensemble.py`
+(2026-09-14, ensemble logits):
+
+| Quantity | Before (T=1.0) | After (T=0.7220) |
+|---|---:|---:|
+| Expected calibration error (ECE, 10 bins) | 0.1969 | 0.1859 |
+| Brier score | 0.1103 | 0.1133 |
+| Log loss | 0.3277 | 0.3183 |
+| Youden-J threshold (val) | — | 0.7498 |
+
+`model/calibration.json` now records `temperature: 0.7220` and
+`calibrated: true` (previously the identity 1.0 / `calibrated: false`).
+
+> **Caveat:** this fit is on a 16-image public adaptation set, not the official
+> CIFAKE/Defactify validation split (10k images), which is not downloadable
+> here. It is a *real* fit but **provisional** — re-fit with
+> `python -m src.training.calibrate --dataset mixed` once the datasets are local.
 
 ## BASELINE
 

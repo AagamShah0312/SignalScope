@@ -39,7 +39,7 @@ implemented or measured.
 | # | Question | Status | Evidence |
 |---|---|---|---|
 | 11 | ROC-AUC reported as primary metric on held-out set | **YES** | `reports/model_report.md`: CIFAKE test AUC 0.9973; Defactify eval AUC 0.8790. Note: "held-out" = the public test splits; the official SIH held-out score is computed by organizers via the prediction interface. |
-| 12 | ROC-AUC reported separately for the unseen-generator split | **PARTIAL** | The leave-one-generator-out harness is implemented (`src/evaluation/evaluate_unseen.py`) and writes `reports/unseen_generator_results.csv`, but the CSV is currently empty — it needs the Defactify dataset locally. **To close:** `python -m src.evaluation.evaluate_unseen` after running the Defactify downloader. |
+| 12 | ROC-AUC reported separately for the unseen-generator split | **PARTIAL / BLOCKED** | The leave-one-generator-out harness is implemented (`src/evaluation/evaluate_unseen.py`) and writes `reports/unseen_generator_results.csv`, but the CSV is empty: the Defactify dataset cannot be downloaded in this environment (`datasets-server.huggingface.co` → TLS connection closed, verified 2026-09-14; the downloader exits with `SSLZeroReturnError`). **To close:** run the downloader + `python -m src.evaluation.evaluate_unseen` where HF egress is available. |
 | 13 | Macro-F1 reported on held-out set | **YES** | 0.9723 (CIFAKE), 0.7303 (Defactify) in `reports/model_report.md`. |
 | 14 | Confusion matrix in the report | **YES** | `reports/model_report.md`, `reports/baseline_results.md`, `reports/mixed_results.md` (e.g. CIFAKE `[[9568,432],[122,9878]]`). Also now in `README.md`. |
 | 15 | Fixed operating threshold with accuracy + FPR at that threshold | **YES** | Threshold 0.5 (config `evaluation.threshold`); accuracy and FPR reported at that threshold in `reports/model_report.md`. |
@@ -50,7 +50,7 @@ implemented or measured.
 | # | Question | Status | Evidence |
 |---|---|---|---|
 | 17 | Augmentation / adaptation for unseen-generator generalisation | **YES** | Stronger augmentation (JPEG/blur/noise) in `config.yaml` + `src/data/transforms.py`; mixed CIFAKE+Defactify training (`src/training/train.py --dataset mixed`); experimental frequency-feature branch; real-photo adaptation fine-tune + ensemble (`reports/real_photo_adaptation.md`). |
-| 18 | Calibration step (temperature scaling) | **PARTIAL** | Temperature scaling + isotonic regression + Youden-J/threshold-at-FPR selection are implemented (`src/training/calibration.py`, `scripts/calibrate.py`). `model/calibration.json` is currently the identity (`temperature 1.0, calibrated:false`) because it has not been fitted on validation data locally. **To close:** `python -m src.training.calibrate --dataset mixed`. |
+| 18 | Calibration step (temperature scaling) | **PARTIAL (provisional fit)** | Real temperature-scaling fit produced via `scripts/calibrate_ensemble.py` on the 16-image local adaptation validation set: `model/calibration.json` now records `temperature: 0.7220, calibrated: true` (was 1.0/false); ECE 0.1969 → 0.1859. **Not** fitted on the official 10k-image validation split — that data is not downloadable here (`--dataset mixed` exits with `FileNotFoundError`). Re-fit when data is local. |
 | 19 | Actual evidence tested on unseen generators | **PARTIAL** | The mixed model was evaluated on the Defactify eval set spanning 5 generators (AUC 0.8790), but those generators were partially included in mixed training, so this is cross-generator — not strictly leave-one-out — evidence. Strict leave-one-out results are pending (`evaluate_unseen.py`). |
 
 ## 5. Explanation bonus (Module A)
@@ -109,9 +109,12 @@ implemented or measured.
 
 ## Remaining gaps (explicit, un-faked)
 
-1. **Unseen-generator (leave-one-out) AUC** — harness ready, needs the Defactify
-   dataset: `python -m src.evaluation.evaluate_unseen` (items 12, 19, 40).
-2. **Temperature-scaling fit** — implementation ready, needs validation data:
+1. **Unseen-generator (leave-one-out) AUC** — harness ready, but the Defactify
+   dataset is **not downloadable** in this environment (HF egress blocked):
+   `python -m src.evaluation.evaluate_unseen` (items 12, 19, 40).
+2. **Temperature-scaling fit on the official validation split** — a provisional
+   fit exists on the 16-image adaptation set (T = 0.7220); the official fit
+   needs the CIFAKE/Defactify validation data:
    `python -m src.training.calibrate --dataset mixed` (item 18).
 3. **Dataset-level robustness benchmark** — needs public data:
    `python -m src.evaluation.evaluate_robustness --limit 200` (item 27); a

@@ -166,6 +166,9 @@ def save_calibration(calibrator, threshold: float, method: str, quality: Dict[st
     payload = {
         "method": method,
         "threshold": float(threshold),
+        # Top-level temperature kept for compatibility with older readers
+        # (see load_calibration); the nested copy is the canonical one.
+        "temperature": float(getattr(calibrator, "temperature", 1.0)),
         "parameters": {
             "temperature": float(getattr(calibrator, "temperature", 1.0)),
         },
@@ -176,7 +179,12 @@ def save_calibration(calibrator, threshold: float, method: str, quality: Dict[st
 
 
 def load_calibration() -> Dict:
-    """Load calibration parameters, returning identity defaults if absent."""
+    """Load calibration parameters, returning identity defaults if absent.
+
+    Normalises both the legacy flat schema (top-level ``temperature``) and the
+    current nested schema (``parameters.temperature``) so callers can always
+    read ``data["temperature"]``.
+    """
     cfg = load_config()
     path = cfg.resolve(cfg.paths.model_dir) / "calibration.json"
     if not path.exists():
@@ -188,5 +196,7 @@ def load_calibration() -> Dict:
         }
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
+    if "temperature" not in data and isinstance(data.get("parameters"), dict):
+        data["temperature"] = data["parameters"].get("temperature", 1.0)
     data["calibrated"] = True
     return data

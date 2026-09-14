@@ -242,10 +242,11 @@ Confusion matrices `[[TN, FP], [FN, TP]]`:
 - **Overall / public-benchmark AUC** — the two rows above, on CIFAKE's and
   Defactify's own public test splits.
 - **Unseen-generator (leave-one-out) AUC** — the metric the task is actually
-  judged on — is **pending**: the runner
+  judged on — is **still pending**: the runner
   (`src/evaluation/evaluate_unseen.py`) is implemented and writes
-  `reports/unseen_generator_results.csv`, but it requires the Defactify dataset
-  locally, which is not present in this repository. It is **not fabricated**.
+  `reports/unseen_generator_results.csv`, but the Defactify dataset cannot be
+  downloaded in the evaluation environment (`datasets-server.huggingface.co`
+  → TLS connection closed). It is **not fabricated**.
 
 The 30-epoch retrain, frequency-feature comparison, and leave-one-generator-out
 results are **pending** the public datasets. See
@@ -255,11 +256,21 @@ results are **pending** the public datasets. See
 
 Temperature scaling (and isotonic regression) are implemented and fitted on
 **validation data only** (`src/training/calibration.py`, `scripts/calibrate.py`).
-The shipped `model/calibration.json` is currently the **identity** (T = 1.0,
-threshold 0.5) because the fit has not been re-run on the public validation
-split in this environment — run `python -m src.training.calibrate --dataset mixed`
-once the data is present. Until then, confidence is the raw (softmax) ensemble
-probability, reported as a likelihood rather than a calibrated probability.
+
+A real fit has been produced against the **local public adaptation validation
+set** (16 images) via `scripts/calibrate_ensemble.py`:
+
+| | Before (T=1.0) | After (T=0.7220) |
+|---|---:|---:|
+| Expected calibration error | 0.1969 | 0.1859 |
+| Brier score | 0.1103 | 0.1133 |
+| Log loss | 0.3277 | 0.3183 |
+
+`model/calibration.json` now records `temperature: 0.7220`, `calibrated: true`
+(previously the identity 1.0 / `calibrated: false`). This fit is **provisional**
+— it uses the 16-image adaptation set because the official CIFAKE/Defactify
+validation split is not downloadable here; re-fit with
+`python -m src.training.calibrate --dataset mixed` when the datasets are local.
 
 ## Generalisation
 
