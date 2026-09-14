@@ -36,4 +36,6 @@ COPY model ./model
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render (and other PaaS runtimes) inject the PORT env var; fall back to 8000
+# for plain `docker run -p 8000:8000 ...`.
+CMD ["sh", "-c", "exec uvicorn app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

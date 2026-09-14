@@ -279,11 +279,20 @@ metadata is never treated as evidence of AI generation.
 
 ## Deployment
 
-- Backend: `uvicorn app.api:app` (Render/Railway/AWS — CPU-friendly).
-- Frontend: `cd frontend && npm run build` (Vercel/Netlify).
+- Backend: `uvicorn app.api:app` (Render/Railway/AWS — CPU-friendly). A
+  [`render.yaml`](render.yaml) blueprint deploys it to Render with a
+  `/health` check.
+- Frontend: `cd frontend && npm run build` (Vercel/Netlify). See
+  [`frontend/vercel.json`](frontend/vercel.json) and set `VITE_API_BASE_URL`
+  to the backend URL.
 - Docker: `docker compose up --build` (see `Dockerfile`, `frontend/Dockerfile`,
   `docker-compose.yml`). **Note:** the Docker build was authored but not
   executed in the development environment.
+- Keep-alive: a scheduled ping of the backend `/health` endpoint keeps Render's
+  free tier warm — see [`deploy/keepalive.yml`](deploy/keepalive.yml) (GitHub
+  Actions template) and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+Full step-by-step instructions: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
 ## Security
 

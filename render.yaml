@@ -1,0 +1,23 @@
+# =============================================================================
+# Render Blueprint — deploy SignalScope API with one click.
+#   https://render.com → New → Blueprint → point at this repository.
+# =============================================================================
+# Notes:
+#   * Render injects the PORT env var; the Dockerfile CMD honours $PORT.
+#   * /health is used as the health check (also the cron keep-alive target).
+#   * The free plan may OOM loading two EfficientNet-B0 models + PyTorch;
+#     the `starter` plan (512 MB, 0.5 CPU) is recommended. Change `plan` to
+#     `free` to try the no-cost tier (expect slower cold starts + possible
+#     memory pressure).
+
+services:
+  - type: web
+    name: signalscope-api
+    runtime: docker
+    plan: starter
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"

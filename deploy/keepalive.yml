@@ -1,0 +1,47 @@
+# =============================================================================
+# Backend keep-alive — GitHub Actions TEMPLATE
+# =============================================================================
+# Render's free tier spins a web service down after ~15 minutes of inactivity.
+# This scheduled workflow pings the backend's /health endpoint every 10 minutes
+# so the demo stays warm (no slow cold start when a judge opens it).
+#
+# IMPORTANT: GitHub Actions only reads workflow files from the
+#   .github/workflows/ directory. This file is stored at deploy/keepalive.yml
+#   because some CI tokens cannot push into .github/workflows. To enable it,
+#   copy this file to:  .github/workflows/keepalive.yml   and push from an
+#   account/branch with permission to write workflow files.
+#
+# Setup (one time):
+#   GitHub repo → Settings → Secrets and variables → Actions → New repository
+#   secret, named SIGNALSCOPE_HEALTH_URL, with the value:
+#       https://signalscope-api.onrender.com/health
+#
+# The step never fails the run when the backend is down (Render may still be
+# spinning up), so the Actions tab won't fill up with red failures.
+# =============================================================================
+
+name: keepalive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: # allow manual runs for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health endpoint
+        env:
+          HEALTH_URL: ${{ secrets.SIGNALSCOPE_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "SIGNALSCOPE_HEALTH_URL secret is not set — skipping."
+            exit 0
+          fi
+          echo "Pinging $HEALTH_URL"
+          if curl -fsS --max-time 30 "$HEALTH_URL"; then
+            echo "health check OK"
+          else
+            echo "health check failed (backend may be asleep or not yet deployed)"
+          fi

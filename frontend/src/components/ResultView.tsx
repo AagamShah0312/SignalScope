@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { resolveAssetUrl } from "../api";
 import type { PredictResponse } from "../types";
 import { ConfidenceBar } from "./ConfidenceBar";
 
@@ -93,7 +94,7 @@ export function ResultView({
           <div className="p-3">
             {active?.src ? (
               <img
-                src={active.src}
+                src={resolveAssetUrl(active.src) ?? undefined}
                 alt={`${active.label} visualization`}
                 className="max-h-[460px] w-full rounded-sm border border-line object-contain"
               />
