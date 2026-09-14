@@ -17,8 +17,13 @@ from src.data.transforms import get_eval_transforms
 
 
 # ==============================================================
-# Configuration
+# DEPRECATED — superseded by:
+#   python -m src.evaluation.evaluate_unseen   (cross-generator)
+#   python -m src.evaluation.evaluate_defactify (per-generator on Defactify)
+# Kept for backward compatibility only.
 # ==============================================================
+
+# Configuration
 
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"

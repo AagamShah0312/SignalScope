@@ -12,8 +12,12 @@ from src.models.model import create_model
 
 
 # ==============================================================
-# Configuration
+# DEPRECATED — superseded by the unified, config-driven trainer.
+# Use:  python -m src.training.train --dataset mixed
+# This script is kept for backward compatibility only.
 # ==============================================================
+
+# Configuration
 
 BATCH_SIZE = 16
 EPOCHS = 5
