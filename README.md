@@ -38,7 +38,7 @@ often fail on images from a new, unseen generator, which is exactly the situatio
 the real world. A verdict alone is also not enough to build trust: without a clear explanation of
 *why* an image was flagged, users have no way to judge or act on the result.
 
-See [`report/01_Problem_Statement_and_Solution.md`](report/01_Problem_Statement_and_Solution.md)
+See [`report/Problem-Statement.md`](report/01_Problem_Statement_and_Solution.md)
 for the full write-up.
 
 ## 3. Proposed solution / architecture
@@ -55,7 +55,7 @@ Image → Preprocessing → EfficientNet-B0 → Probability → Calibration → 
 - **Grad-CAM** — saliency heat-map showing which regions drove the decision.
 - **Explanation** — grounded, human-readable text describing the visual cues, generated from the heat-map.
 
-Full rationale in [`report/01_Problem_Statement_and_Solution.md`](report/01_Problem_Statement_and_Solution.md).
+Full rationale in [`report/Problem-Solution.md`](report/Problem-Solution.md).
 
 ## 4. Repository structure
 
@@ -67,7 +67,7 @@ SignalScope/
 ├── model/                     ← training/inference code + predict interface
 │   └── weights/                ← via release link if large
 ├── report/
-│   ├── 01_Problem_Statement_and_Solution.md
+│   ├── Problem_Statement_and_Solution.md
 │   ├── 02_Project_Metadata.md
 │   └── model_report.md        ← one-page model report (Section 7.3)
 └── demo/                       ← link to demo video, screenshots
@@ -103,7 +103,7 @@ never on data substituted by the team.
 
 ## 7. Reported metrics
 
-*(Fill in after training — keep in sync with [`report/02_Project_Metadata.md`](report/02_Project_Metadata.md))*
+*(Fill in after training — keep in sync with [`report/02_Project_Metadata.md`](report/Project_Metadata.md))*
 
 | Metric | Value |
 |---|---|
@@ -117,7 +117,7 @@ never on data substituted by the team.
 ## 8. Project metadata
 
 Model name/version, dataset, training date, metrics, and commit history are tracked in
-[`report/02_Project_Metadata.md`](report/02_Project_Metadata.md) — update this after every
+[`report/02_Project_Metadata.md`](report/Project_Metadata.md) — update this after every
 training run.
 
 ## 9. Known limitations
