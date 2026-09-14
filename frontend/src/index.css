@@ -6,7 +6,119 @@
   color-scheme: dark;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-ink text-slate-200 antialiased;
+  @apply bg-paper text-fg antialiased;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: rgba(190, 242, 100, 0.28);
+  color: #fff;
+}
+
+/* Thin editorial scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0b;
+}
+::-webkit-scrollbar-thumb {
+  background: #26262b;
+  border: 2px solid #0a0a0b;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #34343b;
+}
+
+@layer components {
+  /* Uppercase, letter-spaced instrument label */
+  .label {
+    @apply font-mono text-[11px] uppercase tracking-label text-muted;
+  }
+
+  .display {
+    @apply font-serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .display em {
+    @apply italic;
+  }
+
+  .rule {
+    @apply border-line;
+  }
+
+  /* Primary (solid white) and ghost (outline) buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-fg px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-white;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-line-strong px-6 py-3 text-sm font-medium text-fg transition-colors hover:border-faint hover:bg-panel-2;
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-[#cdfa72];
+  }
+
+  /* Subtle dotted/grid technical backdrop */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .scanline {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 5px rgba(52, 211, 153, 0);
+  }
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #34d399;
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+.status-dot.off {
+  background: #f87171;
+  animation: none;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
