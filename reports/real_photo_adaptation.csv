@@ -1,0 +1,4 @@
+model,n_real,n_ai,real_false_positive_pct,ai_detection_pct,balanced_accuracy_pct,mean_p_ai_on_real,mean_p_ai_on_ai
+baseline,77,13,94.81,100.0,52.6,0.9292,0.9556
+fine_tuned,77,13,0.0,76.92,88.46,0.0122,0.8
+ensemble,77,13,5.19,92.31,93.56,0.115,0.8817

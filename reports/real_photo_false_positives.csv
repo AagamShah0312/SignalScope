@@ -1,0 +1,9 @@
+image,width,height,ground_truth,probability_ai,verdict,binary_label,misclassified
+coffee,600,400,REAL,0.0858,likely_real,REAL,0
+horse,400,328,REAL,0.0007,likely_real,REAL,0
+rocket,640,427,REAL,0.0334,likely_real,REAL,0
+coins,384,303,REAL,0.0498,likely_real,REAL,0
+moon,512,512,REAL,0.0207,likely_real,REAL,0
+chelsea,451,300,REAL,0.0375,likely_real,REAL,0
+china,640,427,REAL,0.1114,likely_real,REAL,0
+flower,640,427,REAL,0.01,likely_real,REAL,0

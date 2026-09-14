@@ -24,6 +24,14 @@ blocks, all credited below.
 - **CIFAKE** (Kaggle) — training and public testing.
 - **Defactify Image Dataset** (Hugging Face) — public cross-generator
   training/evaluation.
+- **OpenCV `samples/data`** (Apache-2.0) and **scikit-image / scikit-learn
+  bundled sample images** (BSD-3-Clause) — genuine photographs used for the
+  real-photo adaptation fine-tune (identifiable people excluded). See
+  `reports/real_photo_adaptation.md`.
+- **Project-generated synthetic images** — `data/ai_synthetic/*.jpg`
+  (10 images) were generated with an image-generation model for the synthetic
+  training class of the adaptation fine-tune. They depict generic scenes only
+  (landscapes, animals, objects); no real or identifiable people.
 - **Grad-CAM** — the explanation method follows Selvaraju et al., "Grad-CAM:
   Visual Explanations from Deep Networks via Gradient-based Localization"
   (ICCV 2017); the code is an original implementation (~70 lines) over
@@ -35,8 +43,9 @@ blocks, all credited below.
 
 AI coding assistance (an agentic coding tool) was used during development to
 audit the repository, refactor configuration/training/evaluation modules, write
-tests, and draft documentation. All generated code was reviewed and executed
-against the project's test suite.
+tests, and draft documentation. An image-generation model produced the
+synthetic training images in `data/ai_synthetic/` (disclosed above). All
+generated code was reviewed and executed against the project's test suite.
 
 ## What SignalScope implemented independently
 

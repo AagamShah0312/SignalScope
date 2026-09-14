@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+# Allow running directly (python scripts/<file>.py) from anywhere.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 #!/usr/bin/env python
 """Analyse a single image with SignalScope.
 

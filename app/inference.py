@@ -44,6 +44,7 @@ from src.explainability.evidence import (
 from src.explainability.explanation import build_explanation, build_verdict
 from src.explainability.gradcam import GradCAM, save_visualization
 from src.models.model import create_model, load_checkpoint
+from src.models.ensemble import EnsembleClassifier, build_ensemble_from_checkpoints
 from src.provenance.c2pa import detect_c2pa
 from src.provenance.exif import extract_exif
 from src.training.calibration import load_calibration
@@ -54,7 +55,11 @@ class ModelNotFoundError(RuntimeError):
 
 
 class SignalScopePredictor:
-    """Loads the detector once and runs calibrated, explainable inference."""
+    """Loads the detector once and runs calibrated, explainable inference.
+
+    By default it loads the config-driven ensemble (see ``model.ensemble`` in
+    ``config.yaml``).  Passing ``checkpoint_path`` forces a single model.
+    """
 
     def __init__(
         self,
@@ -67,17 +72,39 @@ class SignalScopePredictor:
         self.image_size = int(self.cfg.data.image_size)
         self.num_classes = int(self.cfg.data.num_classes)
 
-        checkpoint = self._resolve_checkpoint(checkpoint_path)
-        if not checkpoint.exists():
-            raise ModelNotFoundError(
-                f"Model checkpoint not found: {checkpoint}\n"
-                "Train a model (scripts/train.py) or download the weights — "
-                "see README.md."
-            )
-
-        self.model = create_model(num_classes=self.num_classes, pretrained=False)
-        load_checkpoint(self.model, str(checkpoint), device=self.device)
-        self.model.eval()
+        self.ensemble = None
+        if checkpoint_path:
+            # Explicit single-model mode.
+            checkpoint = Path(checkpoint_path)
+            if not checkpoint.exists():
+                raise ModelNotFoundError(
+                    f"Model checkpoint not found: {checkpoint}\n"
+                    "Train a model (scripts/train.py) or download the weights — "
+                    "see README.md."
+                )
+            self.model = create_model(num_classes=self.num_classes, pretrained=False)
+            load_checkpoint(self.model, str(checkpoint), device=self.device)
+            self.model.eval()
+            self.members = [(self.model, 1.0)]
+            self.architecture = "EfficientNet-B0"
+        else:
+            self.members, self.architecture = self._load_configured_models()
+            if not self.members:
+                raise ModelNotFoundError(
+                    "No model checkpoint found.\n"
+                    "Train a model (scripts/train.py) or download the weights — "
+                    "see README.md."
+                )
+            if len(self.members) > 1:
+                self.ensemble = EnsembleClassifier(
+                    [m for m, _ in self.members],
+                    weights=[w for _, w in self.members],
+                    device=self.device,
+                )
+                # Grad-CAM uses the highest-weight (primary) member.
+                self.model = self.ensemble.primary
+            else:
+                self.model = self.members[0][0]
 
         self.calibration = load_calibration()
         self.temperature = float(self.calibration.get("temperature", 1.0))
@@ -87,25 +114,54 @@ class SignalScopePredictor:
         self.high_threshold = float(self.cfg.inference.high_threshold)
         self.low_threshold = float(self.cfg.inference.low_threshold)
 
-        self.architecture = "EfficientNet-B0"
+    def _load_configured_models(self):
+        """Resolve the model(s) to load from config (ensemble or single)."""
+        ensemble_cfg = self.cfg.model.get("ensemble")
+        if ensemble_cfg and ensemble_cfg.get("enabled") and ensemble_cfg.get("members"):
+            paths, weights = [], []
+            for member in ensemble_cfg["members"]:
+                p = self.cfg.resolve(member["checkpoint"])
+                if not p.exists():
+                    continue  # skip missing members gracefully
+                paths.append(str(p))
+                weights.append(float(member.get("weight", 1.0)))
+            if len(paths) >= 2:
+                models = []
+                for p in paths:
+                    m = create_model(num_classes=self.num_classes, pretrained=False)
+                    load_checkpoint(m, p, device=self.device)
+                    m.eval()
+                    models.append(m)
+                return list(zip(models, weights)), f"EfficientNet-B0 ensemble ({len(models)})"
+
+        checkpoint = self._resolve_checkpoint(None)
+        if not checkpoint.exists():
+            raise ModelNotFoundError(
+                f"Model checkpoint not found: {checkpoint}\n"
+                "Train a model (scripts/train.py) or download the weights — "
+                "see README.md."
+            )
+        model = create_model(num_classes=self.num_classes, pretrained=False)
+        load_checkpoint(model, str(checkpoint), device=self.device)
+        model.eval()
+        return [(model, 1.0)], "EfficientNet-B0"
 
     def _resolve_checkpoint(self, checkpoint_path: Optional[str]) -> Path:
         """Prefer an explicit path, then newly-trained weights, then the
-        committed baseline checkpoint."""
-        candidates = []
-        if checkpoint_path:
-            candidates.append(Path(checkpoint_path))
-        else:
-            model_dir = self.cfg.resolve(self.cfg.paths.model_dir)
-            candidates += [
-                model_dir / "best_model.pth",
-                model_dir / "best_efficientnet_b0.pth",
-                self.cfg.resolve("src/models/best_efficientnet_b0.pth"),
-            ]
-        for candidate in candidates:
-            if candidate.exists():
-                return candidate
-        return candidates[0] if candidates else Path(checkpoint_path or "")
+        committed baseline checkpoint (see src.models.model.resolve_checkpoint)."""
+        from src.models.model import resolve_checkpoint
+
+        preferred = checkpoint_path or self.cfg.paths.checkpoint
+        return resolve_checkpoint(preferred)
+
+    # ------------------------------------------------------------------
+    # Inference
+    # ------------------------------------------------------------------
+    def _logits(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Combined logits (ensemble average or single-model forward)."""
+        if self.ensemble is not None:
+            return self.ensemble.logits(tensor)
+        return self.model(tensor)
 
     # ------------------------------------------------------------------
     # Probability + verdict
@@ -173,7 +229,7 @@ class SignalScopePredictor:
         # ---- 3. inference --------------------------------------------------
         t1 = time.perf_counter()
         with torch.no_grad():
-            logits = self.model(tensor)
+            logits = self._logits(tensor)
         timing["inference_ms"] = (time.perf_counter() - t1) * 1000
 
         probabilities = self._calibrated_probabilities(logits)

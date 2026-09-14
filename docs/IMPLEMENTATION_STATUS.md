@@ -31,17 +31,18 @@ src/config.py
 src/data/manifests.py
 src/evaluation/{metrics,evaluate_robustness,evaluate_unseen}.py
 src/explainability/{evidence,explanation}.py
-src/models/{frequency_features,fusion_model}.py
+src/models/{frequency_features,fusion_model,ensemble}.py
 src/provenance/{__init__,exif,c2pa}.py
 src/robustness/{degradations,benchmark}.py
-src/training/{calibrate,calibration,losses,reproducibility,tracking}.py
-scripts/{train,evaluate,predict,calibrate}.py
+src/training/{calibrate,calibration,finetune,losses,reproducibility,tracking}.py
+scripts/{train,evaluate,predict,calibrate,finetune,build_finetune_dataset,compare_real_ai,reproduce_real_photo_false_positives}.py
 tests/{conftest,test_model,test_dataset,test_inference,test_api,test_metrics,test_provenance,test_frequency_features,test_calibration}.py
 model/{model_metadata,calibration}.json
-reports/{model_report,model_card,failure_analysis}.md
-reports/{experiments,unseen_generator_results,robustness_results}.csv
+reports/{model_report,model_card,failure_analysis,real_photo_adaptation}.md
+reports/{experiments,unseen_generator_results,robustness_results,real_photo_adaptation,real_photo_false_positives}.csv
 reports/explanation_samples/**
 demo/{README.md,ai_generated/*,real/.gitkeep,degraded/.gitkeep}
+data/ai_synthetic/*.jpg   (10 project-generated synthetic training images, disclosed)
 frontend/** (React/Vite/TS/Tailwind + Dockerfile + nginx)
 docs/AUDIT.md
 DATASETS.md, ORIGINALITY.md, Dockerfile, docker-compose.yml, .dockerignore
@@ -50,11 +51,12 @@ DATASETS.md, ORIGINALITY.md, Dockerfile, docker-compose.yml, .dockerignore
 ## Files modified
 
 ```
-config.yaml            (expanded central config)
+config.yaml            (expanded central config + real-photo ensemble)
 requirements.txt       (UTF-8, complete, pinned)
 README.md              (full rewrite)
-.gitignore             (+ output/, frontend artifacts, experiments/)
-src/models/model.py    (+ load_checkpoint)
+.gitignore             (+ output/, frontend artifacts, experiments/, data/real_photos/)
+src/models/model.py    (+ load_checkpoint, resolve_checkpoint)
+app/inference.py       (ensemble-capable predictor, shared checkpoint resolution)
 src/data/{dataset,loaders,transforms}.py
 src/training/train.py  (unified config-driven trainer + shared train_model)
 src/evaluation/evaluate.py
@@ -79,19 +81,37 @@ pytest tests/ -q                                               # 38 tests
 ## Model weights location
 
 `src/models/best_efficientnet_b0.pth` (committed, 16 MB EfficientNet-B0
-baseline). New training writes `model/best_model.pth` (gitignored). Missing
-weights → every entrypoint fails with a controlled error message.
+CIFAKE baseline) and `src/models/fine_tuned_model.pth` (committed, 16 MB
+real-photo adaptation). The default predictor is a soft-voting ensemble of the
+two (config `model.ensemble`, weights 0.3/0.7) — see
+`reports/real_photo_adaptation.md`. New training writes `model/best_model.pth`
+(gitignored). Missing weights → every entrypoint fails with a controlled error
+message and the ensemble falls back to whatever members are present.
+
+## Real-photo false-positive fix
+
+The 1-epoch CIFAKE baseline misclassified 6/8 bundled real photographs as
+AI-generated (its REAL class is 32x32 CIFAR-10). A fine-tuned model +
+soft-voting ensemble reduces this to 0/8 (bundled) / 5.2% (wider 77-photo set)
+while detecting 92.3% of synthetic images. Details:
+`reports/real_photo_adaptation.md`, `reports/real_photo_adaptation.csv`,
+`reports/real_photo_false_positives.csv`.
 
 ## Dataset requirements
 
-None are present in the repository (correctly ignored). CIFAKE and Defactify
-downloaders exist under `src/data/`. Training/evaluation/calibration/unseen
-experiments require the public datasets to be downloaded first.
+No large datasets are present in the repository (correctly ignored). CIFAKE
+and Defactify downloaders exist under `src/data/`. The real-photo adaptation
+set is rebuilt with `scripts/build_finetune_dataset.py` (fetches OpenCV
+`samples/data` via git, extracts bundled scikit-image/scikit-learn photos, and
+uses the committed `data/ai_synthetic/*.jpg`). Full training/evaluation/
+calibration/unseen experiments require the public datasets to be downloaded
+first.
 
 ## Known limitations
 
-- Shipped model is the 1-epoch CIFAKE baseline (AUC 0.9973 CIFAKE test); it is
-  documented as such and is meant to be retrained.
+- The default ensemble is trained partly on a **tiny adaptation set** (137/16
+  images); its weights are provisional and must be re-estimated on full-scale
+  CIFAKE + Defactify validation data (dataset hosts unreachable in sandbox).
 - 30-epoch / mixed / frequency-feature / unseen-generator metrics are **pending**
   (not fabricated) until data is available.
 - C2PA support is a presence check, not cryptographic verification.

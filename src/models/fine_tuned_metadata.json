@@ -1,0 +1,18 @@
+{
+  "architecture": "EfficientNet-B0 (fine-tuned for real-photo adaptation)",
+  "pretrained": true,
+  "base_checkpoint": "src/models/best_efficientnet_b0.pth",
+  "image_size": 224,
+  "classes": [
+    "REAL",
+    "AI_GENERATED"
+  ],
+  "seed": 42,
+  "train_size": 137,
+  "validation_size": 16,
+  "val_accuracy": 0.8125,
+  "epochs_head": 15,
+  "epochs_finetune": 5,
+  "checkpoint": "src/models/fine_tuned_model.pth",
+  "notes": "Head retrain + last-2-block fine-tune on real photos (OpenCV/skimage samples) + generated synthetic images, to fix real-photograph false positives."
+}

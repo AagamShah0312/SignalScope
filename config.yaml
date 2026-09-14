@@ -55,6 +55,18 @@ model:
   pretrained: true
   dropout: 0.2              # applied in the fusion head only (ignored for plain model)
   use_frequency_features: false
+  # Soft-voting ensemble. The CIFAKE baseline specialises in detecting
+  # synthetic imagery; the fine-tuned model specialises in not flagging real
+  # photos.  Weights were chosen on the small public adaptation evaluation set
+  # (see reports/real_photo_adaptation.md) and are provisional pending
+  # full-scale CIFAKE+Defactify validation.
+  ensemble:
+    enabled: true
+    members:
+      - checkpoint: src/models/best_efficientnet_b0.pth
+        weight: 0.3
+      - checkpoint: src/models/fine_tuned_model.pth
+        weight: 0.7
 
 evaluation:
   # binary decision threshold for the official real-vs-AI score
@@ -88,4 +100,7 @@ paths:
   reports_dir: reports
   experiments_dir: experiments/runs
   output_dir: output
-  checkpoint: model/best_efficientnet_b0.pth
+  # Preferred production checkpoint. Resolution order (see src/models/model.py
+  # resolve_checkpoint): this path -> model/best_model.pth ->
+  # src/models/best_efficientnet_b0.pth (committed baseline fallback).
+  checkpoint: src/models/fine_tuned_model.pth

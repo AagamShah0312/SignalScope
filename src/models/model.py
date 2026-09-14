@@ -51,6 +51,32 @@ def load_checkpoint(
     return model.to(device)
 
 
+def resolve_checkpoint(preferred: Optional[str] = None) -> Path:
+    """Find the best available checkpoint (first existing wins).
+
+    Priority:
+        1. ``preferred`` (explicit argument, e.g. from config paths.checkpoint)
+        2. ``model/fine_tuned_model.pth``  (real-photo adaptation)
+        3. ``model/best_model.pth``        (full training output)
+        4. ``src/models/best_efficientnet_b0.pth``  (committed baseline)
+    """
+    from src.config import load_config
+
+    cfg = load_config()
+    candidates: list = []
+    if preferred:
+        candidates.append(Path(preferred))
+    candidates += [
+        cfg.resolve("src/models/fine_tuned_model.pth"),
+        cfg.resolve("model/best_model.pth"),
+        cfg.resolve("src/models/best_efficientnet_b0.pth"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0] if candidates else Path(preferred or "")
+
+
 if __name__ == "__main__":
     device = get_device()
     model = create_model().to(device)

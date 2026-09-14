@@ -224,6 +224,9 @@ __marimo__/
 # Datasets
 data/raw/
 data/processed/
+# Re-created by scripts/build_finetune_dataset.py (OpenCV + bundled photos)
+data/real_photos/
+data/.opencv-samples-tmp/
 
 # Trained model files
 model/*.pt
