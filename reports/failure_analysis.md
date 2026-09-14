@@ -59,6 +59,16 @@ training; robustness benchmark to measure, not hide, the drop.
 **Did it help?** Pending dataset-local validation; direction documented in
 `config.yaml`.
 
+**Measured (per-image demo, 2026-09-14, `reports/robustness_demo_results.csv`).**
+The ensemble held its verdict across all 13 degradations on 6 of 7 demo images.
+One honest failure surfaced: `ai_landscape` (a photorealistic generated scene)
+sits at P(AI) ≈ 0.51 with the ensemble — near the decision boundary — and its
+binary label flipped under 6 of 13 degradations. The real-photo adaptation
+member of the ensemble pulls this image toward "real" because it resembles the
+real-photo adaptation set. This is the known cost of the real-photo fix and is
+why the demo script uses `ai_ceramic_mug` (P(AI) = 0.9987, 0 flips) as the
+primary AI example.
+
 ## 5. Low-confidence / inconclusive cases
 
 **What failed?** Predictions near the decision boundary produce weak verdicts.

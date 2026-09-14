@@ -224,16 +224,42 @@ adaptation set. See [reports/real_photo_adaptation.md](reports/real_photo_adapta
 
 ## Metrics
 
-Measured results (shipped baseline, public data only):
+Measured results (shipped models, **public data only** — the official SIH
+held-out score is computed separately by the organizers):
 
-| Public benchmark | ROC-AUC | Macro-F1 | Accuracy | FPR |
+| Public benchmark | ROC-AUC | Macro-F1 | Accuracy | FPR (thr 0.5) |
 |---|---:|---:|---:|---:|
 | CIFAKE test (baseline, 1 epoch) | 0.9973 | 0.9723 | 0.9723 | 0.0432 |
 | Defactify eval (mixed model, 5 epochs) | 0.8790 | 0.7303 | 0.8200 | 0.2700 |
 
-New experiments (30-epoch training, frequency features, leave-one-generator-out)
-are **pending** — the dataset is not present in this repository and results are
-never fabricated. See [reports/model_report.md](reports/model_report.md).
+Confusion matrices `[[TN, FP], [FN, TP]]`:
+
+- CIFAKE baseline: `[[9568, 432], [122, 9878]]`
+- Defactify mixed model: `[[73, 27], [81, 419]]`
+
+**Overall vs unseen-generator AUC** (kept separate, on purpose):
+
+- **Overall / public-benchmark AUC** — the two rows above, on CIFAKE's and
+  Defactify's own public test splits.
+- **Unseen-generator (leave-one-out) AUC** — the metric the task is actually
+  judged on — is **pending**: the runner
+  (`src/evaluation/evaluate_unseen.py`) is implemented and writes
+  `reports/unseen_generator_results.csv`, but it requires the Defactify dataset
+  locally, which is not present in this repository. It is **not fabricated**.
+
+The 30-epoch retrain, frequency-feature comparison, and leave-one-generator-out
+results are **pending** the public datasets. See
+[reports/model_report.md](reports/model_report.md).
+
+## Calibration status
+
+Temperature scaling (and isotonic regression) are implemented and fitted on
+**validation data only** (`src/training/calibration.py`, `scripts/calibrate.py`).
+The shipped `model/calibration.json` is currently the **identity** (T = 1.0,
+threshold 0.5) because the fit has not been re-run on the public validation
+split in this environment — run `python -m src.training.calibrate --dataset mixed`
+once the data is present. Until then, confidence is the raw (softmax) ensemble
+probability, reported as a likelihood rather than a calibrated probability.
 
 ## Generalisation
 
@@ -253,7 +279,11 @@ heatmap is a model explanation, **not proof** of any specific artifact.
 
 `src/robustness/` applies realistic degradations (JPEG, resize, blur, noise,
 brightness/contrast, crop, screenshot) and reports how the prediction changes.
-Results are reported honestly, including failures.
+Results are reported honestly, including failures. A measured per-image demo
+run is in [`reports/robustness_demo_results.csv`](reports/robustness_demo_results.csv)
+(regenerate with `python scripts/robustness_demo.py`); the dataset-level
+benchmark is `python -m src.evaluation.evaluate_robustness --limit 200`
+(pending public data).
 
 ## Provenance
 
@@ -275,7 +305,8 @@ metadata is never treated as evidence of AI generation.
 
 - Demo images: `demo/ai_generated/` (generic, no people).
 - Grad-CAM sample set: `reports/explanation_samples/`.
-- Demo video: to be added after the live recording.
+- Demo video: **to be recorded** — follow [`demo/DEMO_SCRIPT.md`](demo/DEMO_SCRIPT.md)
+  and paste the link here once published.
 
 ## Deployment
 
